@@ -32,7 +32,8 @@ namespace SocialMediaApi
                 options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
             }).ConfigureApiBehaviorOptions(options=> 
             {
-                options.SuppressModelStateInvalidFilter = true;
+
+                //options.SuppressModelStateInvalidFilter = true;
             });
             services.AddDbContext<SocialMediaContext>(options => options.UseSqlServer(Configuration.GetConnectionString("ConnectionDB")));
             services.AddTransient<IPostRespository, PostRepository>();
