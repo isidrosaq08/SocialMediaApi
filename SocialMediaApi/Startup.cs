@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SocialMedia.Core.Interfaces;
+using SocialMedia.Core.Services;
 using SocialMedia.Infrastructure.Data;
 using SocialMedia.Infrastructure.Filters;
 using SocialMedia.Infrastructure.Repositories;
@@ -36,7 +37,18 @@ namespace SocialMediaApi
                 //options.SuppressModelStateInvalidFilter = true;
             });
             services.AddDbContext<SocialMediaContext>(options => options.UseSqlServer(Configuration.GetConnectionString("ConnectionDB")));
-            services.AddTransient<IPostRespository, PostRepository>();
+            
+            /**Services*/
+            services.AddTransient<IPostService, PostService>();
+
+            /*Repositories*/
+            //services.AddTransient<IPostRepository, PostRepository>();
+            //services.AddTransient<IUserRepository, UserRepository>();
+
+            services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
+
+            services.AddTransient<IUnitOfWork, UnitOfWork>();
+
             services.AddMvc(options =>
             {
                 options.Filters.Add<ValidationFilter>();
