@@ -28,7 +28,7 @@ namespace SocialMediaApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-            services.AddControllers().AddNewtonsoftJson(options => 
+            services.AddControllers(options=> options.Filters.Add<GlobalExceptionFilter>()).AddNewtonsoftJson(options => 
             {
                 options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
             }).ConfigureApiBehaviorOptions(options=> 
@@ -42,8 +42,6 @@ namespace SocialMediaApi
             services.AddTransient<IPostService, PostService>();
 
             /*Repositories*/
-            //services.AddTransient<IPostRepository, PostRepository>();
-            //services.AddTransient<IUserRepository, UserRepository>();
 
             services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 

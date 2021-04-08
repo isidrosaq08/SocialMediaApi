@@ -1,7 +1,10 @@
 ﻿using SocialMedia.Core.Entities;
+using SocialMedia.Core.Exceptions;
 using SocialMedia.Core.Interfaces;
+using SocialMedia.Core.QueryFilter;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SocialMedia.Core.Services
@@ -19,14 +22,25 @@ namespace SocialMedia.Core.Services
             var user = await _unitOfWork.UserRepository.GetById(post.UserId);
             if (user == null) 
             {
-                throw new Exception("User doesn't exist");
+                throw new BusinessException("User doesn't exist");
+            }
+
+            var userPosts = await _unitOfWork.PostRepository.GetPostsByUser(post.UserId);
+            if ( userPosts !=null && userPosts.Count()<10) 
+            {
+                var lastPost = userPosts.OrderByDescending(x=>x.Date).FirstOrDefault();
+                if ((DateTime.Now - lastPost.Date).TotalDays < 7) 
+                {
+                    throw new BusinessException("You catn't  to publish yet");
+                }
             }
             if (post.Description.ToLower().Contains("sexo")) 
             {
-                throw new Exception("Some words in description aren't allowed");
+                throw new BusinessException("Some words in description aren't allowed");
             }
 
             await _unitOfWork.PostRepository.Add(post);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task<bool> DeletePost(int id)
@@ -40,14 +54,29 @@ namespace SocialMedia.Core.Services
             return await _unitOfWork.PostRepository.GetById(id);
         }
 
-        public async Task<IEnumerable<Post>> GetPosts()
+        public IEnumerable<Post> GetPosts(PostQueryFilter filters)
         {
-            return await _unitOfWork.PostRepository.GetAll();
+            var posts = _unitOfWork.PostRepository.GetAll();
+
+            if (filters.UserId != null)
+            {
+                posts = posts.Where(x => x.UserId == filters.UserId);
+            }
+            if (filters.Date != null)
+            {
+                posts = posts.Where(x => x.Date.ToShortDateString() == filters.Date?.ToShortDateString());
+            }
+            if (filters.Description != null)
+            {
+                posts = posts.Where(x => x.Description.ToLower().Contains(filters.Description.ToLower()));
+            }
+            return posts;
         }
 
         public async Task<bool> UpdatePost(Post post)
         {
-            await _unitOfWork.PostRepository.Update(post);
+           _unitOfWork.PostRepository.Update(post);
+            await _unitOfWork.SaveChangesAsync();
             return true;
         }
     }
